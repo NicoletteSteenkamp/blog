@@ -3,6 +3,8 @@ import { createContext, useEffect, useState } from "react";
 
 // Create the AuthContext
 export const AuthContext = createContext();
+// create API
+const API = import.meta.env.VITE_API_URL;
 
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(
@@ -12,7 +14,7 @@ export const AuthContextProvider = ({ children }) => {
   // Login function with error handling
   const login = async (inputs) => {
     try {
-      const res = await axios.post("/auth/login", inputs);
+      const res = await axios.post(`${API}/api/auth/login`, inputs);
       setCurrentUser(res.data);
     } catch (error) {
       console.error("Login failed:", error);
@@ -23,7 +25,7 @@ export const AuthContextProvider = ({ children }) => {
   // Logout function with error handling
   const logout = async () => {
     try {
-      await axios.post("/auth/logout");
+      await axios.post(`${API}/api/auth/logout`);
       setCurrentUser(null);
     } catch (error) {
       console.error("Logout failed:", error);
