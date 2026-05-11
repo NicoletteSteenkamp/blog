@@ -1,28 +1,27 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import Edit from "../assets/edit.png";
 import Delete from "../assets/delete.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Menu from "../components/Menu";
 import axios from "axios";
-import moment from "moment";
-import { useContext } from "react";
 import { AuthContext } from "../context/authContext";
 import DOMPurify from "dompurify";
 
+const API = import.meta.env.VITE_API_URL;
+
 const Single = () => {
   const [post, setPost] = useState({});
-
   const location = useLocation();
   const navigate = useNavigate();
 
   const postId = location.pathname.split("/")[2];
-
   const { currentUser } = useContext(AuthContext);
 
+  // Fetch post
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`/posts/${postId}`);
+        const res = await axios.get(`${API}/posts/${postId}`);
         setPost(res.data);
       } catch (err) {
         console.log(err);
@@ -31,49 +30,75 @@ const Single = () => {
     fetchData();
   }, [postId]);
 
-  const handleDelete = async ()=>{
+  // Delete post
+  const handleDelete = async () => {
     try {
-      await axios.delete(`/posts/${postId}`);
-      navigate("/")
+      await axios.delete(`${API}/posts/${postId}`);
+      navigate("/");
     } catch (err) {
       console.log(err);
     }
-  }
+  };
 
-  const getText = (html) =>{
-    const doc = new DOMParser().parseFromString(html, "text/html")
-    return doc.body.textContent
-  }
+  // Simple "time ago" helper (replaces moment.js)
+  const timeAgo = (date) => {
+    if (!date) return "";
+
+    const diff = Date.now() - new Date(date).getTime();
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
 
   return (
     <div className="single">
       <div className="content">
-        <img src={`../upload/${post?.img}`} alt="" />
-        <div className="user">
-          {post.userImg && <img
-            src={post.userImg}
+
+        {/* Post image */}
+        {post.img && (
+          <img
+            src={`${API}/upload/${post.img}`}
             alt=""
-          />}
+          />
+        )}
+
+        <div className="user">
+
+          {/* user image */}
+          {post.userImg && <img src={post.userImg} alt="" />}
+
           <div className="info">
             <span>{post.username}</span>
-            <p>Posted {moment(post.date).fromNow()}</p>
+            <p>Posted {timeAgo(post.date)}</p>
           </div>
-          {currentUser.username === post.username && (
+
+          {/* safe optional chaining */}
+          {currentUser?.username === post.username && (
             <div className="edit">
               <Link to={`/write?edit=2`} state={post}>
-                <img src={Edit} alt="" />
+                <img src={Edit} alt="edit" />
               </Link>
-              <img onClick={handleDelete} src={Delete} alt="" />
+              <img onClick={handleDelete} src={Delete} alt="delete" />
             </div>
           )}
         </div>
+
         <h1>{post.title}</h1>
+
         <p
           dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(post.desc),
+            __html: DOMPurify.sanitize(post.desc || ""),
           }}
-        ></p>      </div>
-      <Menu cat={post.cat}/>
+        />
+
+      </div>
+
+      <Menu cat={post.cat} />
     </div>
   );
 };
