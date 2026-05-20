@@ -1,11 +1,14 @@
 import axios from "axios";
 import { createContext, useEffect, useState } from "react";
-import { makeRequest } from "../axios";
+import PropTypes from "prop-types";
 export const AuthContext = createContext();
 
 const API = import.meta.env.VITE_API_URL;
 
 export const AuthContextProvider = ({ children }) => {
+  AuthContextProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
