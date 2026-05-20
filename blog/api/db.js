@@ -135,16 +135,16 @@ app.post('/api/login', (req, res) => {
 const verifyToken = (req, res, next) => {
     console.log("COOKIES:", req.cookies);
 
-    const token = req.cookies.token || req.headers['authorization']?.split(' ')[1];
+    const token =
+        req.cookies.token ||
+        req.headers['authorization']?.split(' ')[1];
 
     if (!token) {
-        console.log("NO TOKEN FOUND");
         return res.status(403).json({ message: 'Token required' });
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.log("TOKEN INVALID", err);
             return res.status(401).json({ message: 'Invalid token' });
         }
 
