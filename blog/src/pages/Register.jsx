@@ -1,7 +1,11 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { makeRequest } from "../axios";
+
+await makeRequest.post("/auth/register", inputs);
+
+const API = import.meta.env.VITE_API_URL;
 
 const Register = () => {
   const [inputs, setInputs] = useState({
@@ -9,28 +13,36 @@ const Register = () => {
     email: "",
     password: "",
   });
-  const [err, setError] = useState(null);
 
+  const [err, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setInputs((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post("/auth/register", inputs);
+      await axios.post(`${API}/api/register`, inputs, {
+        withCredentials: true,
+      });
+
       navigate("/login");
     } catch (err) {
-      setError(err.response.data);
+      setError(err.response?.data || "Registration failed");
     }
   };
 
   return (
     <div className="auth">
       <h1>Register</h1>
-      <form>
+
+      <form onSubmit={handleSubmit}>
         <input
           required
           type="text"
@@ -38,6 +50,7 @@ const Register = () => {
           name="username"
           onChange={handleChange}
         />
+
         <input
           required
           type="email"
@@ -45,6 +58,7 @@ const Register = () => {
           name="email"
           onChange={handleChange}
         />
+
         <input
           required
           type="password"
@@ -52,8 +66,11 @@ const Register = () => {
           name="password"
           onChange={handleChange}
         />
-        <button onClick={handleSubmit}>Register</button>
+
+        <button type="submit">Register</button>
+
         {err && <p>{err}</p>}
+
         <span>
           Do you have an account? <Link to="/login">Login</Link>
         </span>
