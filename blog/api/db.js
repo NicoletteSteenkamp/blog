@@ -139,6 +139,34 @@ app.get('/api/protected', verifyToken, (req, res) => {
     });
 });
 
+app.post('/api/posts', verifyToken, (req, res) => {
+    const { title, desc, img, cat } = req.body;
+
+    const q = `
+        INSERT INTO posts(title, \`desc\`, img, cat, date, uid)
+        VALUES (?, ?, ?, ?, NOW(), ?)
+    `;
+
+    db.query(
+        q,
+        [title, desc, img, cat, req.user.id],
+        (err, data) => {
+            if (err) return res.status(500).json(err);
+            return res.json({ message: "Post created" });
+        }
+    );
+});
+
+app.get('/api/posts', (req, res) => {
+    const q = req.query.cat
+        ? "SELECT * FROM posts WHERE cat = ?"
+        : "SELECT * FROM posts";
+
+    db.query(q, [req.query.cat], (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
+    });
+});
 // START SERVER
 const PORT = process.env.PORT || 8081;
 
