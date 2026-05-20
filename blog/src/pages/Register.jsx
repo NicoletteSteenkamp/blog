@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { makeRequest } from "../axios";
-
-await makeRequest.post("/auth/register", inputs);
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -34,7 +31,11 @@ const Register = () => {
 
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data || "Registration failed");
+      setError(
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Registration failed. Please check your details and try again."
+      );
     }
   };
 
