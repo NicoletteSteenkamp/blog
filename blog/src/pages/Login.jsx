@@ -1,15 +1,14 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
-
+import { makeRequest } from "../axios";
 const Login = () => {
   const [inputs, setInputs] = useState({
-    email: "",
-    password: "",
-  });
+  email: "",
+  password: "",
+});
 
-  const [err, setError] = useState(null);
-
+  setError(err.response?.data || "Login failed");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 

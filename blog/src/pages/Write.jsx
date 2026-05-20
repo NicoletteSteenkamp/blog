@@ -6,6 +6,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL;
 
+// IMPORTANT for cookie-based auth
+axios.defaults.withCredentials = true;
+
 const Write = () => {
   const state = useLocation().state;
 
@@ -21,7 +24,10 @@ const Write = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await axios.post(`${API}/upload`, formData);
+      const res = await axios.post(`${API}/upload`, formData, {
+        withCredentials: true,
+      });
+
       return res.data;
     } catch (err) {
       console.log(err);
@@ -35,19 +41,27 @@ const Write = () => {
 
     try {
       if (state) {
-        await axios.put(`${API}/posts/${state.id}`, {
-          title,
-          desc: value,
-          cat,
-          img: file ? imgUrl : "",
-        });
+        await axios.put(
+          `${API}/posts/${state.id}`,
+          {
+            title,
+            desc: value,
+            cat,
+            img: file ? imgUrl : "",
+          },
+          { withCredentials: true }
+        );
       } else {
-        await axios.post(`${API}/posts`, {
-          title,
-          desc: value,
-          cat,
-          img: file ? imgUrl : "",
-        });
+        await axios.post(
+          `${API}/posts`,
+          {
+            title,
+            desc: value,
+            cat,
+            img: file ? imgUrl : "",
+          },
+          { withCredentials: true }
+        );
       }
 
       navigate("/");

@@ -21,7 +21,7 @@ const Single = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`${API}/posts/${postId}`);
+        const res = await axios.get(`${API}/posts/${postId}`, { withCredentials: true });
         setPost(res.data);
       } catch (err) {
         console.log(err);
@@ -32,13 +32,15 @@ const Single = () => {
 
   // Delete post
   const handleDelete = async () => {
-    try {
-      await axios.delete(`${API}/posts/${postId}`);
-      navigate("/");
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  try {
+    await axios.delete(`${API}/posts/${postId}`, {
+      withCredentials: true,
+    });
+    navigate("/");
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   // Simple "time ago" helper (replaces moment.js)
   const timeAgo = (date) => {
@@ -61,11 +63,11 @@ const Single = () => {
 
         {/* Post image */}
         {post.img && (
-          <img
-            src={`${API}/upload/${post.img}`}
-            alt=""
-          />
-        )}
+  <img
+    src={post.img.startsWith("http") ? post.img : `${API}/upload/${post.img}`}
+    alt=""
+  />
+)}
 
         <div className="user">
 
@@ -80,7 +82,7 @@ const Single = () => {
           {/* safe optional chaining */}
           {currentUser?.username === post.username && (
             <div className="edit">
-              <Link to={`/write?edit=2`} state={post}>
+              <Link to="/write" state={post}>
                 <img src={Edit} alt="edit" />
               </Link>
               <img onClick={handleDelete} src={Delete} alt="delete" />
