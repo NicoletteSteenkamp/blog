@@ -52,7 +52,7 @@ db.connect((err) => {
 // -------------------------
 const verifyToken = (req, res, next) => {
   const token =
-    req.cookies.token ||
+    req.cookies.access_token ||
     req.headers.authorization?.split(" ")[1];
 
   if (!token) {
@@ -68,7 +68,6 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
-
 // -------------------------
 // TOKEN CREATOR
 // -------------------------
@@ -77,10 +76,10 @@ const generateToken = (userId, res) => {
     expiresIn: "1h",
   });
 
-  res.cookie("token", token, {
+  res.cookie("access_token", token, {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "none",
   });
 };
 
@@ -88,93 +87,40 @@ const generateToken = (userId, res) => {
 // REGISTER
 // -------------------------
 app.post("/api/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { username, email, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!username || !email || !password) {
     return res.status(400).json({ message: "All fields required" });
   }
 
   db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
+    "SELECT * FROM users WHERE email = ? OR username = ?",
+    [email, username],
     async (err, results) => {
       if (err) return res.status(500).json(err);
 
       if (results.length > 0) {
-        return res.status(409).json({ message: "Email already exists" });
+        return res.status(409).json({ message: "User already exists" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      const user = {
-        name,
-        email,
-        password: hashedPassword,
-      };
+      const q =
+        "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
 
-      db.query("INSERT INTO users SET ?", user, (err, result) => {
-        if (err) return res.status(500).json(err);
+      db.query(
+        q,
+        [username, email, hashedPassword],
+        (err, result) => {
+          if (err) return res.status(500).json(err);
 
-        generateToken(result.insertId, res);
+          generateToken(result.insertId, res);
 
-        res.status(201).json({ message: "User registered" });
-      });
-    }
-  );
-});
-
-// -------------------------
-// LOGIN
-// -------------------------
-app.post("/api/login", (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: "All fields required" });
-  }
-
-  db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    async (err, results) => {
-      if (err) return res.status(500).json(err);
-
-      if (results.length === 0) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const user = results[0];
-
-      const match = await bcrypt.compare(password, user.password);
-
-      if (!match) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      generateToken(user.id, res);
-
-      res.json({ message: "Login successful" });
-    }
-  );
-});
-
-// -------------------------
-// POSTS - CREATE
-// -------------------------
-app.post("/api/posts", verifyToken, (req, res) => {
-  const { title, desc, img, cat } = req.body;
-
-  const q = `
-    INSERT INTO posts(title, \`desc\`, img, cat, date, uid)
-    VALUES (?, ?, ?, ?, NOW(), ?)
-  `;
-
-  db.query(
-    q,
-    [title, desc, img, cat, req.user.id],
-    (err) => {
-      if (err) return res.status(500).json(err);
-      res.json({ message: "Post created" });
+          res.status(201).json({
+            message: "User registered",
+          });
+        }
+      );
     }
   );
 });
